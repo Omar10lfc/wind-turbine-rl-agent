@@ -28,7 +28,7 @@ The project features a live **Streamlit Web Interface** that allows users to int
 
 ---
 
-## ⚔️ Benchmark: AI Agent vs. PID Controller
+## Benchmark: AI Agent vs. PID Controller
 
 To validate the engineering value of this model, I benchmarked the trained PPO Agent against a standard PID Controller ($K_p=0.5, K_i=0, K_d=0.1$) over a 500-step simulation using real-world weather data.
 
@@ -42,7 +42,7 @@ To validate the engineering value of this model, I benchmarked the trained PPO A
 
 ---
 
-## 🏆 Final Engineering Metrics
+## Final Metrics
 
 After training for 100,000 timesteps, the agent was evaluated on a comprehensive 1,000-step simulation.
 
@@ -54,7 +54,7 @@ After training for 100,000 timesteps, the agent was evaluated on a comprehensive
 
 ---
 
-## 📊 Visual Results
+## Visual Results
 
 ### 1. The "Storm Test" (Safety Response)
 
@@ -67,13 +67,13 @@ The agent was subjected to a synthetic storm (Wind ramping from 5 m/s to 25 m/s)
 
 ### 2. Learning Curve
 
-![Learning Curve](images/learning_curve.png)
+![Learning Curve](images/agent_learning_curve.png)
 
 * The agent successfully converged after ~80k timesteps, recovering from early exploration strategies to find a stable, high-reward policy.
 
 ---
 
-## 🛠️ Technical Implementation
+## Technical Implementation
 
 The environment simulates a 3.6MW turbine based on Blade Element Momentum (BEM) theory proxies.
 
@@ -104,7 +104,7 @@ This function forces the agent to balance the conflicting goals of **Greedy Powe
 
 ---
 
-## 🚀 How to Run
+## How to Run
 
 1. **Clone the repo:**
 
