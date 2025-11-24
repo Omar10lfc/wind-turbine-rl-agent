@@ -1,0 +1,10 @@
+gymnasium
+stable-baselines3
+pandas
+numpy
+matplotlib
+seaborn
+streamlit
+tensorboard
+shimmy>=0.2.1
+pillow

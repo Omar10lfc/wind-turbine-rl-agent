@@ -1,0 +1,17 @@
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore Datasets (Too big for git)
+Data/
+data/
+*.csv
+
+# Ignore Models (Optional: keep final model, ignore checkpoints)
+models/*
+!models/ppo_wind_turbine_final.zip  # Force include the final one if small enough
+logs/
+
+# Ignore IDE settings
+.vscode/
+.qodo/
