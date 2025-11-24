@@ -109,7 +109,7 @@ This function forces the agent to balance the conflicting goals of **Greedy Powe
 1. **Clone the repo:**
 
    ```bash
-   git clone [https://github.com/YourUsername/wind-turbine-rl.git](https://github.com/YourUsername/wind-turbine-rl.git)
+   git clone [https://github.com/omar10lfc/wind-turbine-rl.git](https://github.com/omar10lfc/wind-turbine-rl.git)
    cd wind-turbine-rl
 
 2. **Install dependencies:**
