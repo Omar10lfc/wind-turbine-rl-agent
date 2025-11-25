@@ -7,7 +7,7 @@
 
 ![Dashboard Demo](images/dashboard.gif)
 
-## 📌 Project Overview
+## Project Overview
 
 This project implements a **Proximal Policy Optimization (PPO)** agent to control the blade pitch angle of a wind turbine. The goal is to solve the classic **Control Theory trade-off**:
 
@@ -18,7 +18,16 @@ Unlike traditional PID controllers, this RL agent learns the non-linear aerodyna
 
 ---
 
-## 💻 Interactive Dashboard
+## The Tech Stack
+
+* **Environment:** Custom `Gymnasium` env with aerodynamic physics (BEM theory proxy).
+* **Algorithm:** PPO (Stable-Baselines3).
+* **Data Source:** [Wind Turbine SCADA Dataset (Kaggle)](https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset) - Used to simulate realistic wind variability.
+* **Optimization:** Reward function tuned to balance Energy Capture vs. Mechanical Stress.
+
+---
+
+## Interactive Dashboard
 
 The project features a live **Streamlit Web Interface** that allows users to interact with the AI agent in real-time.
 
