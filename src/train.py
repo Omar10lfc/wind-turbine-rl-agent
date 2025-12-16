@@ -6,14 +6,13 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from env import WindTurbineEnv
 import matplotlib.pyplot as plt
-# 1. Create log and model directories
+
 log_dir = "logs"
 models_dir = "models"
 os.makedirs(log_dir, exist_ok=True)
 os.makedirs(models_dir, exist_ok=True)
 
 # 2. Create Environment with "Monitor" (Crucial for plotting graphs later)
-# We wrap the env to record stats like "Average Reward per Episode"
 env = WindTurbineEnv()
 env = Monitor(env, log_dir)
 
@@ -24,14 +23,15 @@ model = PPO(
     verbose=1, 
     learning_rate=0.0003,
     ent_coef=0.01, # Encourages exploration so it doesn't get stuck
-    tensorboard_log=log_dir
+    tensorboard_log=log_dir,
+    seed=42
 )
 
-# 4. Train! 
+# Train
 # 100,000 steps is a good start.
 print("Training started...")
 model.learn(total_timesteps=100000)
 
-# 5. Save the final brain
+# Save the final brain
 model.save(f"{models_dir}/ppo_wind_turbine_final")
 print("Training Complete! Model saved.")

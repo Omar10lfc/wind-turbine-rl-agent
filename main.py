@@ -6,7 +6,6 @@ print("Initial Observation:", obs)
 
 # Run 10 random steps
 for i in range(20):
-    # Take a random action
     action = env.action_space.sample() 
     obs, reward, done, _, info = env.step(action)
     

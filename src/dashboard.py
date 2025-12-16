@@ -7,25 +7,22 @@ import sys
 from stable_baselines3 import PPO
 import matplotlib.pyplot as plt
 
-# --- PATH SETUP ---
-# Add current directory to path so imports work
+# -PATH SETUP 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 try:
     from env import WindTurbineEnv
 except ImportError:
     from src.env import WindTurbineEnv
 
-# --- PAGE CONFIG ---
 st.set_page_config(
     page_title="Wind Turbine AI Controller",
     page_icon="🌬️",
     layout="wide"
 )
 
-# --- LOAD MODEL (Cached) ---
+# -LOAD MODEL
 @st.cache_resource
 def load_resources():
-    # Find model path automatically
     current_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(current_dir)
     model_path = os.path.join(project_root, 'models', 'ppo_wind_turbine_final.zip')
@@ -37,7 +34,7 @@ def load_resources():
     env = WindTurbineEnv()
     return model, env
 
-# --- INITIALIZE SESSION STATE ---
+# INITIALIZE SESSION STATE
 if 'history' not in st.session_state:
     st.session_state.history = {
         'wind': [], 'power': [], 'pitch': [], 'rotor': [], 'limit': []
@@ -45,14 +42,14 @@ if 'history' not in st.session_state:
 if 'step_count' not in st.session_state:
     st.session_state.step_count = 0
 
-# --- SIDEBAR CONTROLS ---
-st.sidebar.title("🎮 Control Panel")
+# SIDEBAR CONTROLS 
+st.sidebar.title("Control Panel")
 simulation_mode = st.sidebar.radio("Mode", ["Manual Control", "Storm Scenario"])
 
 manual_wind = 0.0
 if simulation_mode == "Manual Control":
     manual_wind = st.sidebar.slider("Set Wind Speed (m/s)", 0.0, 30.0, 10.0, 0.5)
-    st.sidebar.caption("💡 Try moving this past 13 m/s to see the AI pitch up!")
+    st.sidebar.caption("Try moving this past 13 m/s to see the AI pitch up!")
 
 run_sim = st.sidebar.button("Step Simulation")
 auto_run = st.sidebar.checkbox("Auto-Run (Live)")
@@ -62,7 +59,7 @@ if reset_btn:
     st.session_state.history = {'wind': [], 'power': [], 'pitch': [], 'rotor': [], 'limit': []}
     st.session_state.step_count = 0
 
-# --- MAIN LOGIC ---
+# MAIN LOGIC 
 st.title("🌬️ Autonomous Wind Turbine Dashboard")
 st.markdown("""
 **Real-time Inference:** The PPO Agent observes the wind and adjusts blade pitch to maximize power while ensuring safety.
@@ -71,7 +68,7 @@ st.markdown("""
 model, env = load_resources()
 
 if model is None:
-    st.error("❌ Model not found! Please run 'python src/train.py' first.")
+    st.error("Model not found! Please run 'python src/train.py' first.")
     st.stop()
 
 # Function to run one timestep
@@ -94,7 +91,7 @@ def step_environment():
     elif w >= 13.0: t_pow = 3600
     else: t_pow = 3600 * ((w - 3.5) / (13.0 - 3.5))**3
     
-    # --- THE FIX: Create a 100-row buffer ---
+    # Create a 100-row buffer
     # We create 100 identical rows. This ensures that when the environment
     # tries to read "Index + 1", it always finds valid data.
     env.data = pd.DataFrame({
@@ -145,7 +142,7 @@ if run_sim or auto_run:
         time.sleep(0.1)
         st.rerun()
 
-# --- VISUALIZATION ---
+# VISUALIZATION
 
 # 1. KPI Metrics
 kpi1, kpi2, kpi3, kpi4 = st.columns(4)

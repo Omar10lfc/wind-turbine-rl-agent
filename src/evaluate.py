@@ -25,7 +25,7 @@ def get_paths():
         
     return log_dir, models_dir, images_dir
 
-# --- TEST 1: Learning Curve ---
+# TEST 1: Learning Curve
 def plot_learning_curve():
     log_dir, _, images_dir = get_paths()
     print(f"Generating Learning Curve from: {log_dir}")
@@ -58,7 +58,7 @@ def plot_learning_curve():
     plt.savefig(os.path.join(images_dir, 'agent_learning_curve.png'))
     print("Saved 'agent_learning_curve.png'")
 
-# --- TEST 2: Real Variable Wind ---
+# TEST 2: Real Variable Wind 
 def run_variable_wind_test():
     _, models_dir, images_dir = get_paths()
     model_path = os.path.join(models_dir, "ppo_wind_turbine_final.zip")
@@ -103,7 +103,7 @@ def run_variable_wind_test():
     plt.savefig(os.path.join(images_dir, 'variable_wind_test.png'))
     print("Saved 'variable_wind_test.png'")
 
-# --- TEST 3: Synthetic Storm (Safety Test) ---
+# TEST 3: Synthetic Storm (Safety Test)
 def run_storm_test():
     _, models_dir, images_dir = get_paths()
     model_path = os.path.join(models_dir, "ppo_wind_turbine_final.zip")
@@ -187,7 +187,7 @@ def run_storm_test():
     
     
     
-# --- TEST 4: AI vs PID Benchmark ---
+# TEST 4: AI vs PID Benchmark ---
 
 class PIDController:
     """ Simple PID implementation for comparison """
@@ -225,7 +225,7 @@ def run_comparison_test():
     # A standard PID tuning
     pid = PIDController(kp=0.5, ki=0.0, kd=0.1, target=13.0) 
     
-    # --- ROUND 1: THE AI AGENT ---
+    # ROUND 1: THE AI AGENT
     obs, _ = env.reset(seed=42) 
     ai_power_total = 0
     ai_safety_violations = 0
@@ -241,14 +241,13 @@ def run_comparison_test():
             
         if done: obs, _ = env.reset()
 
-    # --- ROUND 2: THE PID CONTROLLER ---
+    # ROUND 2: THE PID CONTROLLER
     obs, _ = env.reset(seed=42) 
     pid_power_total = 0
     pid_safety_violations = 0
     
     for _ in range(steps):
         current_rpm = env.rotor_speed
-        
         # PID Control Logic
         pitch_change = pid.compute(current_rpm)
         action = [np.clip(pitch_change, -1.0, 1.0)]
@@ -262,7 +261,7 @@ def run_comparison_test():
             
         if done: obs, _ = env.reset()
 
-    # --- RESULTS ---
+    # RESULTS
     print(f"\n{'='*40}")
     print(f"       BENCHMARK RESULTS       ")
     print(f"{'='*40}")
@@ -284,7 +283,7 @@ def run_comparison_test():
     else:
         print("VERDICT: PID is still superior. Consider training for 500k steps.")
         
-# --- TEST 5: Quantitative Report Card ---
+# TEST 5: Quantitative Report Card
 def run_metrics_test():
     print("\nGenerating Engineering Report Card...")
     
@@ -313,8 +312,7 @@ def run_metrics_test():
         action, _ = model.predict(obs, deterministic=True)
         obs, _, done, _, info = env.step(action)
         
-        # A. Power Data (THE FIX)
-        # Now we get both values directly from the environment
+        # A. Power Data
         generated = info['power']
         theoretical = info['theoretical_power']
         
@@ -322,7 +320,7 @@ def run_metrics_test():
         total_theoretical_power += theoretical
 
         # B. Safety Data
-        rotor_speed = obs[3] * 14.0 # Un-normalize
+        rotor_speed = obs[3] * 14.0
         if rotor_speed > 14.0:
             safety_violations += 1
 
@@ -343,7 +341,7 @@ def run_metrics_test():
     print("       AI AGENT REPORT CARD       ")
     print("="*40)
     print(f"1. Power Efficiency (PCE):   {pce:.2f}%")
-    # Strict grading: 95-101% is great. Over 101% implies a physics bug (which we just fixed).
+    # Strict grading: 95-101% is great.
     print(f"   -> Verdict: {'GREAT' if 90 <= pce <= 100 else 'GOOD' if pce > 80 else 'SUSPICIOUS'}")
     
     print(f"\n2. Safety Violation Rate:    {violation_rate:.2f}%")
