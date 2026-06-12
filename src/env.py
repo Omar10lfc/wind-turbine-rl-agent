@@ -128,17 +128,23 @@ class WindTurbineEnv(gym.Env):
         frac = (wind - self.cut_in_wind) / (self.rated_wind - self.cut_in_wind)
         return self.rated_power * frac ** 3
 
+    def _row(self):
+        """Current data row, with the index clamped to the last valid row.
+        Defensive: a correctly-used env resets after truncation, but clamping
+        guarantees we never index past the end (e.g. on tiny dummy datasets)."""
+        return self.data.iloc[min(self.current_idx, self.max_idx)]
+
     def _wind_and_power(self):
         """Effective wind and theoretical power for the current row, applying any
         domain-randomisation wind scaling consistently."""
-        row = self.data.iloc[self.current_idx]
+        row = self._row()
         if self.wind_scale == 1.0:
             return row["wind_speed"], row["theoretical_power"]
         wind = min(row["wind_speed"] * self.wind_scale, self.wind_clip)
         return wind, self._theoretical_power(wind)
 
     def _get_obs(self):
-        row = self.data.iloc[self.current_idx]
+        row = self._row()
         wind, _ = self._wind_and_power()
         return np.array(
             [

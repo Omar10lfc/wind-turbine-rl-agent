@@ -69,16 +69,20 @@ def test_action_clipping_keeps_pitch_in_bounds():
     env = make_env()
     env.reset(seed=3)
     for _ in range(200):
-        env.step(np.array([10.0], dtype=np.float32))  # way past the [-1, 1] range
+        _, _, term, trunc, _ = env.step(np.array([10.0], dtype=np.float32))  # past [-1, 1]
         assert env.min_pitch <= env.current_pitch <= env.max_pitch
+        if term or trunc:
+            env.reset(seed=3)
 
 
 def test_rotor_speed_within_physical_clamp():
     env = make_env()
     env.reset(seed=4)
     for _ in range(300):
-        env.step(np.array([-1.0], dtype=np.float32))  # drive for max capture
+        _, _, term, trunc, _ = env.step(np.array([-1.0], dtype=np.float32))  # max capture
         assert 0.0 <= env.rotor_speed <= env.hard_rotor_speed
+        if term or trunc:
+            env.reset(seed=4)
 
 
 def test_theoretical_power_curve():
