@@ -3,28 +3,24 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from stable_baselines3 import PPO
 import pandas as pd
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from env import WindTurbineEnv
+from config import CONFIG, get_paths
+from agent_utils import load_rl_predict
 
 def create_dashboard_gif():
     # 1. Setup Paths Automatically
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(current_dir)
-    models_dir = os.path.join(project_root, 'models')
-    images_dir = os.path.join(project_root, 'images')
-    
-    model_path = os.path.join(models_dir, "ppo_wind_turbine_final.zip")
-    
-    if not os.path.exists(model_path):
-        print(f"Model not found at: {model_path}")
+    _, models_dir, _, images_dir, _ = get_paths(CONFIG)
+
+    predict = load_rl_predict(CONFIG["deploy"]["seed"], models_dir, CONFIG)  # deploy agent
+    if predict is None:
+        print("Model not found. Train first: python src/train.py")
         return
 
     print("Loading Model and Environment...")
-    model = PPO.load(model_path)
-    env = WindTurbineEnv()
+    env = WindTurbineEnv(CONFIG)
     obs, _ = env.reset()
 
     # 2. Generate Storm Data
@@ -53,20 +49,20 @@ def create_dashboard_gif():
     env.current_idx = 0 
 
     # 3. Run Simulation & Capture Frames
-    print("🎬 Running Simulation to generate Animation Data...")
+    print("Running Simulation to generate Animation Data...")
     history = {'wind': [], 'power': [], 'pitch': [], 'rotor': []}
     
     for _ in range(storm_duration - 1):
-        action, _ = model.predict(obs, deterministic=True)
-        obs, reward, done, _, info = env.step(action)
-        
-        history['wind'].append(obs[0] * 25.0)
+        action = predict(obs)
+        obs, reward, terminated, truncated, info = env.step(action)
+
+        history['wind'].append(obs[0] * env.wind_norm)
         history['power'].append(info['power'])
-        history['pitch'].append(obs[4] * 90.0)
-        history['rotor'].append(obs[3] * 14.0)
+        history['pitch'].append(info['pitch'])
+        history['rotor'].append(info['rotor_speed'])
 
     # 4. Create the Dashboard Animation
-    print("🎨 Drawing Dashboard...")
+    print("Drawing Dashboard...")
     fig = plt.figure(figsize=(10, 6), facecolor='#1e1e1e')
     gs = fig.add_gridspec(2, 3)
 

@@ -1,0 +1,109 @@
+# ======================================================================
+# Wind Turbine RL — central configuration
+# All physics constants, reward weights, and training hyperparameters
+# live here so experiments are reproducible and nothing is hardcoded.
+# ======================================================================
+
+paths:
+  # Resolved relative to the project root (see src/config.py).
+  data_file: data/sim_weather_clean.csv
+  models_dir: models
+  logs_dir: logs
+  images_dir: images
+  results_dir: results
+
+# --- Physics / environment model -------------------------------------
+# NOTE: This is a SIMPLIFIED control-oriented model, NOT a validated
+# aeroelastic (BEM / OpenFAST) simulation. The rotor dynamics use
+# lumped force coefficients chosen so the qualitative behaviour
+# (feathering reduces capture and brakes the rotor) is correct. The
+# absolute kW/RPM values are not calibrated to a real 3.6 MW turbine.
+# See README "Methods & Limitations".
+env:
+  min_pitch: 0.0          # deg
+  max_pitch: 90.0         # deg
+  max_rotor_speed: 14.0   # RPM — soft safety limit used in the reward
+  hard_rotor_speed: 20.0  # RPM — physical clamp on the state
+  rated_power: 3600.0     # kW
+  initial_rotor_speed: 10.0
+  episode_max_steps: 1000 # cap so episodes are comparable across seeds
+  pitch_rate: 2.0         # deg of pitch change per unit action (|action|<=1),
+                          # i.e. max +/-2 deg/step. Fast enough to feather within
+                          # a storm ramp while staying a bounded, realistic rate.
+
+  # Domain randomisation (TRAINING ONLY; eval/dashboard use scale=1.0). With
+  # probability gust_prob, an episode's wind is multiplied by a factor sampled
+  # from wind_scale_range and clipped to wind_clip. This exposes the agent to
+  # sustained high-wind / storm regimes that are rare in the real SCADA data, so
+  # it learns to feather instead of failing out-of-distribution.
+  domain_randomization: true
+  gust_prob: 0.5
+  wind_scale_range: [1.0, 1.5]
+  wind_clip: 30.0
+  rated_wind: 13.0        # wind (m/s) at/above which theoretical power = rated
+  cut_in_wind: 3.5        # wind (m/s) below which theoretical power = 0
+
+  # Lumped first-order rotor model (dimensionless gains, not identified physics):
+  #   rotor_{t+1} = rotor_t + aero_torque - load_gain * rotor_t
+  #   aero_torque = (wind / ref_wind)^2 * cos(pitch) * input_force_gain
+  # load_gain is a generator/friction damping term that gives the rotor a
+  # STABLE wind- and pitch-dependent equilibrium (rotor* = aero_torque/load_gain).
+  # Gains chosen so that at pitch 0: rated wind (~13 m/s) settles near the 14 RPM
+  # limit, lower winds are safe, and high winds require feathering. This is the
+  # key fix over a pure-integrator model, which had no restoring force and made
+  # safe power capture impossible for ANY controller.
+  input_force_gain: 1.175
+  input_force_ref_wind: 12.0
+  load_gain: 0.115
+
+  # Normalisation constants used to scale observations into ~[-1, 1].
+  wind_norm: 25.0
+
+# --- Reward weights (multi-objective) --------------------------------
+reward:
+  power_weight: 1.0          # reward = power_weight * (P / P_rated)
+  safety_penalty: 1.0        # subtracted on each overspeed step. Kept modest: a
+                             # large penalty collapses the policy to the degenerate
+                             # "always feather / zero capture" attractor, so this is
+                             # tuned to the energy/safety knee (see README Methods).
+  smoothness_penalty: 0.01   # * |delta pitch|
+  terminate_on_overspeed: false  # see README: hard-termination over-
+                                 # penalises and collapses the policy to
+                                 # excessive feathering. We penalise but
+                                 # keep the episode running instead.
+
+# --- Deployment ------------------------------------------------------
+deploy:
+  seed: 2   # trained seed used for the live dashboard, GIF and storm figure.
+            # Selected as the most storm-robust of the 5 trained seeds; storm
+            # feathering emerges with domain randomisation but varies by seed
+            # (an honest training-variance finding — see README).
+
+# --- PPO training ----------------------------------------------------
+train:
+  total_timesteps: 100000
+  learning_rate: 0.0003
+  ent_coef: 0.01
+  n_steps: 2048
+  batch_size: 64
+  gamma: 0.99
+  policy: MlpPolicy
+  use_vecnormalize: true
+  # Seeds used for the N-seed evaluation (mean +/- std reporting).
+  seeds: [0, 1, 2, 3, 4]
+
+# --- Evaluation ------------------------------------------------------
+eval:
+  eval_steps: 1000
+  eval_seed: 42
+  # Evaluate every controller across N evenly-spaced wind windows spanning the
+  # whole dataset (not a single slice), so the reported numbers reflect many
+  # weather conditions. Per controller: average over windows; then across the
+  # 5 RL seeds report mean +/- std.
+  n_windows: 8
+  # Grid of PID gains swept to find a *fair* tuned baseline rather than
+  # an arbitrary strawman. The best (highest energy with 0 violations)
+  # is reported alongside the RL agent.
+  pid_target_rpm: 13.0
+  pid_kp_grid: [0.1, 0.25, 0.5, 1.0, 2.0, 4.0]
+  pid_kd_grid: [0.0, 0.1, 0.5, 1.0]

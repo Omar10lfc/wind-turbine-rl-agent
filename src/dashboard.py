@@ -4,15 +4,17 @@ import numpy as np
 import time
 import os
 import sys
-from stable_baselines3 import PPO
-import matplotlib.pyplot as plt
 
-# -PATH SETUP 
+# -PATH SETUP
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 try:
     from env import WindTurbineEnv
+    from agent_utils import load_rl_predict
+    from config import CONFIG, get_paths
 except ImportError:
     from src.env import WindTurbineEnv
+    from src.agent_utils import load_rl_predict
+    from src.config import CONFIG, get_paths
 
 st.set_page_config(
     page_title="Wind Turbine AI Controller",
@@ -23,16 +25,13 @@ st.set_page_config(
 # -LOAD MODEL
 @st.cache_resource
 def load_resources():
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(current_dir)
-    model_path = os.path.join(project_root, 'models', 'ppo_wind_turbine_final.zip')
-    
-    if not os.path.exists(model_path):
+    _, models_dir, _, _, _ = get_paths(CONFIG)
+    seed = CONFIG["deploy"]["seed"]
+    predict = load_rl_predict(seed, models_dir, CONFIG)  # deploy agent + VecNormalize
+    if predict is None:
         return None, None
-    
-    model = PPO.load(model_path)
-    env = WindTurbineEnv()
-    return model, env
+    env = WindTurbineEnv(CONFIG)
+    return predict, env
 
 # INITIALIZE SESSION STATE
 if 'history' not in st.session_state:
@@ -65,9 +64,9 @@ st.markdown("""
 **Real-time Inference:** The PPO Agent observes the wind and adjusts blade pitch to maximize power while ensuring safety.
 """)
 
-model, env = load_resources()
+predict, env = load_resources()
 
-if model is None:
+if predict is None:
     st.error("Model not found! Please run 'python src/train.py' first.")
     st.stop()
 
@@ -123,7 +122,7 @@ def step_environment():
     ], dtype=np.float32)
 
     # 5. Predict Action & Step Environment
-    action, _ = model.predict(obs, deterministic=True)
+    action = predict(obs)
     _, _, _, _, info = env.step(action)
     
     # 6. Save History for Plotting
